@@ -6,54 +6,54 @@ Useful links:
 
 #### CS 252 Table of Contents
 
-1. [Software Engineering Principles](#1)
-- Software life cycle
-- Modules and modular design
-- Top down and object oriented design
+1. [Software Engineering Principles](#1-software-engineering-principles)
+  - Software life cycle
+  - Modules and modular design
+  - Top down and object oriented design
 
-2. [Data Abstraction and Classes](#2)
-- Abstract data types and classes in C++
-- Constructors, destructors, friends, and operator overloading
+2. [Data Abstraction and Classes](#2-data-abstraction-and-classes)
+  - Abstract data types and classes in C++
+  - Constructors, destructors, friends, and operator overloading
 
-3. [Concrete Data Structures](#3)
-- Data structure overview
-- Concrete vs abstract data structures, linear vs nonlinear data structures
-- Fundamental data structures in C++: arrays and pointers, structs and unions, linked lists
+3. [Concrete Data Structures](#3-concrete-data-structures)
+  - Data structure overview
+  - Concrete vs abstract data structures, linear vs nonlinear data structures
+  - Fundamental data structures in C++: arrays and pointers, structs and unions, linked lists
 
-4. [Recursion](#4)
-- Recursive functions
-- Recursion vs iteration
-- Recursive data structures: binary trees
+4. [Recursion](#4-recursion)
+  - Recursive functions
+  - Recursion vs iteration
+  - Recursive data structures: binary trees
 
-5. [Basic Abstract Data Types](#5)
-- General concepts, templates
-- Basic abstract data types: vectors, sets, bags, lists, stacks, queues, tables
+5. [Basic Abstract Data Types](#5-basic-abstract-data-types)
+  - General concepts, templates
+  - Basic abstract data types: vectors, sets, bags, lists, stacks, queues, tables
 
-6. [Object Oriented Design](#6)
-- Inheritance
-- Virtual functions
-- Inheritance and program design
+6. [Object Oriented Design](#6-object-oriented-design)
+  - Inheritance
+  - Virtual functions
+  - Inheritance and program design
 
-7. [Search Structures and Searching Algorithms](#7)
-- Complexity analysis and big-O notation
-- Linear and binary search
-- Hashing, linear-probed hash tables, chained hashing
-- Binary search trees, AVL trees
-- Heaps - priority queues
+7. [Search Structures and Searching Algorithms](#7-search-structures-and-searching-algorithms)
+  - Complexity analysis and big-O notation
+  - Linear and binary search
+  - Hashing, linear-probed hash tables, chained hashing
+  - Binary search trees, AVL trees
+  - Heaps - priority queues
 
-8. [Sorting Algorithms](#8)
-- Insertion, selection and bubble sort
-- Quicksort, average and worst case analysis
-- Tree sort, heap sort, finding nth largest
+8. [Sorting Algorithms](#8-sorting-algorithms)
+  - Insertion, selection and bubble sort
+  - Quicksort, average and worst case analysis
+  - Tree sort, heap sort, finding nth largest
 
-9. [External Searching and Sorting](#9)
-- Searching on disk: m-way search trees, b-trees
-- Sorting on disk - mergesort
+9. [External Searching and Sorting](#9-external-searching-and-sorting)
+  - Searching on disk: m-way search trees, b-trees
+  - Sorting on disk - mergesort
 
-10. [Graphs](#10)
-- Adjacent matrix and adjacency list representation
-- Depth-first and breadth-first search, topological sorting
-- Spanning trees, shortest paths
+10. [Graphs](#10-graphs)
+  - Adjacent matrix and adjacency list representation
+  - Depth-first and breadth-first search, topological sorting
+  - Spanning trees, shortest paths
 
 
 # 1. Software Engineering Principles
@@ -130,7 +130,7 @@ Before implementing the modules that we have designed, we design a plan that wil
 For our account class, we should test all public operations with expected and boundary data. We should also check to see that the class invariant is maintained at all times. For example, what happens if we try to withdraw an amount greater than the current balance?
 
 
-# 2. Abstract Data Types and Classes
+# 2. Data Abstraction and Classes
 An **abstract data type** is a user-defined data type that is implemented in such a way that the data is hidden behind a public set of operations on that data.
 
 The notion of *information hiding* is extremely common--most gadgets we interact with have well-designed interfaces that hide the inner workings of the object. For example, the buttons on the outside of a cell phone provide the user with all the operations necessary to use the phone effectively. Most cell phone users probably have no idea about the inner workings of the phone. The point is good design--it is not necessary for anyone to understand exactly how it works in order to use it. The data types we define should operate on the same principle: they should provide an easy to user interface that hides the inner workings.
@@ -205,9 +205,9 @@ Now that we have designed the public interface, we can think about how a client 
 IntVector myVector;
 int capacity = myVector.size();
 for( int index = 0; index < capacity; index++ )
-	myVector.at( index ) = index + 1;
+    myVector.at( index ) = index + 1;
 for( index = capacity - 1; index >= 0; index-- )
-	cout << myVector.at( index ) << endl;
+    cout << myVector.at( index ) << endl;
 ```
 
 Declaring `IntVector myVector;` calls our constructor function. `cout << myVector.at(0);` uses the “at” member function we defined. Notice how we have been able to write this code using only our knowledge of the public interface.
@@ -217,8 +217,8 @@ We declare the state variables or member variables in the private section. By de
 In general you should declare the minimum number of state variables necessary to represent the state of the object. In the case of the IntVector class, the private section looks as follows:
 ```C++
 private:
-	static const int MAX_SIZE = 100; // capacity of array
-	int data[MAX_SIZE]; // data in vector
+    static const int MAX_SIZE = 100; // capacity of array
+    int data[MAX_SIZE]; // data in vector
 ```
 
 Finally we implement each of the four member functions:
@@ -233,7 +233,7 @@ IntVector::IntVector()
 int IntVector::at( int index ) const
 {
     if (0 <= index && index < max_size)
-    	return data[index];
+        return data[index];
     else 
     {
     cout << “error: index not valid” << endl;
@@ -782,4 +782,50 @@ We have now covered the Big Three:
 
 Whenever you implement a class that has a data member that points to dynamically allocated memory, you must provide an implementation of the Big Three. You cannot rely on the default version of these member functions provided by the compiler.
 
+##### Operator Overloading
 
+When we want to assign an element to a vector or retrieve an element stored in a vector, we can do so using the indexing operator [] rather than the at() member function:
+
+```C++
+vector<int> myVector( 4 );
+myVector[0] = 34;
+cout << myVector[0] << endl;
+```
+
+We are now going to consider how to add this functionality to our `IntVector` class.
+
+For the same reason that we have two versions of the `at()` member function, we need to supply two versions of the overloaded indexing operator:
+
+```C++
+int operator[]( int index ) const;
+// Pre: if 0 <= index < size() the element at
+// index is returned, otherwise program aborted
+
+int& operator[]( int index );
+// Pre: if 0 <= index < size() the element at
+// index is returned, otherwise program aborted
+```
+
+The implementation of these operators is exactly the same as the corresponding `at()` function. We can simply call the `at()` function from the `operator[]` function:
+
+```C++
+int IntVector::operator[]( int index ) const
+{
+    return at( index );
+}
+```
+
+This has the advantage of being concise, but it is a little inefficient because of the cost of the function call. We have to remember that this operator may be called many times by a client program.
+
+A more efficient implementation can be had by duplicating the code that is found in the `at()` function. The disadvantage here is that the code becomes "bloated" and we see blocks of duplicate code. We can still use the concise version of the `operator[]` defined previously and possibly avoid the overhead of a function call by declaring the `at()` functions to be `inline`. The `inline` keyword *suggests* that the compiler replace each call to the `inline` function with the body of that function, thereby avoiding the function call. Note the use of the word *suggests*--the compiler can choose not to `inline` a function if it sees fit!
+
+We declare a member function to be inline by adding the `inline` keyword at the beginning of the function definition:
+
+```C++
+inline int IntVector::at( int index ) const
+{
+...
+}
+```
+
+# 3. Concrete Data Structures
