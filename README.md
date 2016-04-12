@@ -829,3 +829,151 @@ inline int IntVector::at( int index ) const
 ```
 
 # 3. Concrete Data Structures
+
+There are two kinds of data types:
+- *Simple* (or *atomic*) -- represents a single data item: int, char
+- *Structured* -- represents a collection of items and has:
+  - domain: description of item associated with the structure
+  - structure: description of how items are organized/arranged within structure
+  - operations: operations that can be performed on the collection
+
+Data structures can be classified in the following way:
+- *Linear* -- there is a unique first and unique last element and every other element has a unique predecessor and a unique successor
+- *Non-linear* -- a data structure that is not linear
+
+Linear data structures can be further classified as:
+- *Direct-access*: elements can be accessed at random, in any order
+- *Sequential-access*: elements must be accessed in some specified order
+
+Data structures can further be classified as:
+- *Homogeneous*: all the elements in the structure are of the same data type
+- *Heterogenous (non-homogeneous)*: the elements in the structure are of different types, for example: a record (`struct` in C++)
+
+A `struct` is just like a class with the exception that, by default, the member are public. For example:
+
+```C++
+struct date
+{
+    int day;
+    string month;
+    int year;
+};
+```
+
+##### Concrete vs. Abstract Data Types
+
+*Concrete Data Types* (CDTs) are direct implementations of fairly simple structures. Abstraction and information hiding are not employed when designing CDTs.
+
+*Abstract Data Types* (ADTs) offer a high-level, easy-to-use interface that is independent of the ADT's implementation.
+
+Example: We can implement a student record either as a CDT or an ADT:
+
+CDT: implement it as a `struct` where all the data is public:
+
+```C++
+struct student
+{
+    string name;
+    int idNum;
+};
+```
+
+ADT: Implement it as a class where the data is private but a set of public operations is defined that allow the client to operate on the data.
+
+We will now examine some basic concrete data types.
+
+##### Records
+
+Records allow us to group together data of potentially differing data types into a single unit. In C++ records are implemented using `struct`s.
+- *Domain*: a collection of items of potentially different data types and a set of names for the items in the record
+- *Structure*: objects are stored in consecutive memory locations and each object has a unique name
+- *Operations*: the '.' operator provides access to each element in the record.
+
+Example:
+
+```C++
+struct Course
+{
+    string dept;
+    int number;
+};
+// client code below
+Course compCourse;
+compCourse.dept = "CPSC";
+compCourse.number = 252;
+```
+
+Note that we have access to the individual data members using the '.' operator. No attempt is made to "hide" the data behind a set of public operations.
+
+##### Arrays
+
+An array is a linear, direct access, homogeneous, concrete data structure.
+- *Domain*: a collection of *n* items of the same data type and a set of indexes in the range [ 0, *n* ]
+- *Structure*: items are stored in consecutive locations each having a unique index
+- *Operations*: the indexing operator [] gives read and write access to the item at the specified index.
+
+Given that we are classifying an array as a CDT, we should have a good understanding of how it is implemented. It turns out that there is a strong connection between arrays and pointers. Consider the following declaration:
+
+```C++
+int data[ 3 ];
+```
+
+This declaration allocates memory for three integers and assigns the address of the first byte of this memory to `data` (which can be thought of as a constant pointer).
+
+##### Pointer Arithmetic
+
+The algebraic operators +, -, ++ and -- are overloaded to operate on pointers. So, `(data + 2)` is a pointer to the third integer in the array. In other words, `(data + 2)` points to the integer at index 2! Hence, we can assign a value to the integer at index 2 as follows:
+
+```C++
+data[ 2 ] = 7;
+// or
+*(data + 2) = 7; // value at (data + 2) is 7
+```
+
+Notice that there is something rather subtle going on here. By adding the integer 2 to data, we do not produce an address that is 2 bytes higher than the one stored in data. We in fact produce an address that is 8 bytes higher, assuming that each integer occupies 4 bytes:
+|     pointer     |  array   |  memory      |
+|----------|:-----:|---------|
+|   data   | ___ | 4 bytes |
+| data + 1 | ___ | 4 bytes |
+| data + 2 | ___ | 4 bytes |
+
+The following code again illustrates the connection between indexing into an array and pointer arithmetic:
+
+```C++
+int data[ 4 ] = { 4, 3, 2, 1 };
+
+for( int index = 0; index < 4; index++ )
+    cout << *( data + index ) << " ";
+
+// output: 4 3 2 1
+// equivalent to data[ index ]
+```
+
+Arrays can be passed as parameters to functions. A function `printArray` can be declared to accept an array of integers as a parameter in either of the following ways:
+
+```C++
+void printArray( int data[], int size );
+void printArray( int* data, int size );
+```
+
+Regardless of the way in which the function is declared, it can be implemented in either of the following ways:
+
+```C++
+{
+    for( int index = 0; index < size; index++ )
+        cout << data[ index ] << " ";
+}
+// or
+{
+    for( int index = 0; index < size; index++ )
+        cout << *(data + index) << " ";
+}
+```
+
+Finally, let's recall how we allocate an array dynamically:
+
+```C++
+int* data = new int[ 3 ];
+```
+
+This appears no different from the previous array, however the array is stored in different segments of memory. With the previous array, the data is stored in the stack segment, whereas the data in the dynamically allocated array is stored in the heap segment. We can access elements in a dynamically allocated array using either the indexing operator or pointer arithmetic.
