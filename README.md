@@ -977,3 +977,280 @@ int* data = new int[ 3 ];
 ```
 
 This appears no different from the previous array, however the array is stored in different segments of memory. With the previous array, the data is stored in the stack segment, whereas the data in the dynamically allocated array is stored in the heap segment. We can access elements in a dynamically allocated array using either the indexing operator or pointer arithmetic.
+
+##### Multidimensional Arrays
+
+Suppose we want to store the average rainfall during each hour for a period of one week. We can do so conveniently using a two-dimensional array:
+
+```C++
+float rainfall[ 7 ][ 24 ];
+```
+
+We can think of the two-dimensional array as a table having 7 rows (one for each day) and 24 columns (one for each hour). To set the rainfall on the first day for the hour between noon and 1pm:
+
+```C++
+rainfall[ 0 ][ 12 ] = 1.2;
+```
+
+What if we want to use dynamic memory allocation? One way to proceed is to declare an array of pointers to each row in the table and then dynamically allocate memory to each row:
+
+```C++
+int* data[ 3 ]; // array of 3 pointers
+data[ 0 ] = new int[ 3 ];
+data[ 1 ] = new int[ 2 ];
+data[ 2 ] = new int[ 4 ];
+```
+
+We can index into the array just as before. Notice that this has given us the flexibility of having a two dimensional array where the rows are of different lengths! But we are still faced with the restriction that if we want to change the number of rows, we have to re-compile the program because the dimension of the array of pointers must be a constant.
+
+We can gain the most flexibility by declaring data to be a pointer to a pointer to an integer. We can then declare the array of pointers dynamically as well as dynamically allocating memory to each row:
+
+```C++
+int** data; // ** creates pointer to a pointer
+data = new int*[ 2 ];
+data[ 0 ] = new int[ 4 ];
+data[ 1 ] = new int[ 3 ];
+```
+
+Again, we can index into the array just as before.
+
+##### Linked Lists
+
+*Motivation*: We now have a version of the `IntVector` class that uses dynamic memory allocation. This allows us to specify the dimension of an object of type `IntVector` at run-time. However, if we specify the dimension of an `IntVector` to be, say 100, but then determine that we in fact want to store 110 integers, it is an expensive operation to increase the capacity of the vector:
+- allocate memory to a larger array
+- copy the data from the original array to the new array
+- release the memory allocated to the original array
+
+It is not possible to increase the capacity of the original array.
+
+A linked list will allow us to store data in a structure that can grow or shrink dynamically as needed. A (singly) linked list is a linear, sequential access, homogeneous data structure.
+- *Domain*: a pointer to a node at the head of the list; a collection of nodes each of which contains a data element
+- *Structure*: there is a pointer to the first node in the list and each node contains a pointer that points to the next node in the list with the exception of the last.
+- *Operations*: insertFirst, insertLast, insertAfter, find, deleteItem, printNode, etc.
+
+We will now implement a linked list toolkit--a module that contains the implementation of the operations that we want to support. In doing so, we are implementing the linked list as a concrete data type.
+
+First we must determine how to represent a node. This is a simple data structure so we will implement it as a CDT using a `struct`. We will assume that a `typedef` statement is used to define the data type of the elements to be stored in the list:
+
+```C++
+typedef int Item_type;
+
+struct Node
+{
+    Item_type item; // data stored in node
+    Node* next; // points to next node in list
+};
+```
+
+Now let's suppose that we declare a pointer to a `Node` object and dynamically allocate memory to a new node:
+
+```C++
+Node* nodePtr;
+notePtr = new Node;
+```
+
+When we insert a new element into a linked list, we need to create a new node. We will start by writing a helper function to do this:
+
+```C++
+Node* makeNode( const Itemtype& theItem,
+                        Node* nextNode = 0 )
+// Post: a new node is created containing theItem; the
+// new node is linked to nextNode (or is null); a
+// pointer to the new node is returned
+{
+    Node* newNodePtr = new Node;
+    newNodePtr->item = theItem;
+    newNodePtr->next = nextNode;
+    return newNodePtr;
+}
+```
+
+Note that in our documentation, we do not specify what will happen if our request for a new node fails due to insufficient memory. We will address this problem later in the course.
+
+We will now write functions to implement each of the other operations. When working with linked lists, *draw a picture* of what it is you are trying to do. You will then find the implementation a lot easier!
+
+```C++
+void insertFirst( Node*& head,
+                  const Item_type& item )
+// Pre: head points to the head of a list or is null
+// Post: item is inserted at the front of the list
+{
+    Node* newNode = makeNode(item, head);
+    head = newNode;
+}
+
+void insertLast( Node*& head,
+                  const Item_type& item )
+// Pre: head points to the head of a list or is null
+// Post: item is inserted at the end of the list
+{
+    Node* newNode = makeNode( item );
+    if ( head == null)
+        head = newNode;
+    else
+    {
+        node *cursor = head;
+        while (cursor->next != null)
+            cursor = cursor->next;
+            cursor->next = newNode;
+    }
+}
+
+Node* find( Node* head,
+                  const Item_type& item )
+// Pre: head points to the head of a list or is null
+// Post: if the item is in the list, a pointer to the node
+// containing it is returned; otherwise a null pointer
+// is returned
+{
+    Node* cursor;
+    while ( cursor != null && cursor->item != item )
+        cursor = cursor->next;
+    return cursor;
+}
+
+bool deleteItem( Node* head,
+                  const Item_type& item )
+// Pre: head points to the head of a list or is null
+// Post: if item is in the list it has been deleted
+// and true returned; otherwise false returned
+{
+    Node* cursor = head;
+    Node* previousNode = null;
+    while ( cursor != null && cursor->item != item )
+    {
+        previousNode = cursor;
+        cursor = cursor->next;
+    }
+    if ( cursor == null ) // item not found
+        return false;
+    else // item found
+    {
+        if ( previousNode == null ) // item is the first one
+            head = head->next;
+        else
+        {
+            previousNode->next = cursor->next;
+            delete cursor;
+        }
+        return true;
+    }
+}
+```
+
+Let's now consider the `printNode` function:
+
+```C++
+void printNode( Node* thisNode )
+// Pre: thisNode points to a node, the << operator is
+// overloaded for objects of type Item_type
+// Post: the item in the node pointed to by thisNode has
+// been printed on screen
+{
+    cout << thisNode->item << endl;
+}
+```
+
+Now let's consider the problem of traversing an entire linked list and operating on the data in each node. For example, we may want to print out the data in each node. We will write a function `traverse` that receives a pointer to a linked list and a pointer to a function as parameters. We will assume that the function pointed to has a `void` return type and takes a pointer to a `Node` as a parameter--our `printNode` function, for example!
+
+```C++
+void traverse( Node* head, void ( *visit ) ( Node * ) )
+// Pre: head points to the head of a list or is null;
+// visit points to a function that takes a pointer to
+// a node as a parameter and returns void
+// Post: the function pointed to by visit is applied to each node in the list
+{
+    Node* cursor;
+    for( cursor = head; cursor != null; cursor = cursor->next )
+        ( *visit )( cursor );
+}
+```
+
+We should now give some consideration to how the traverse function will be called. Let's suppose that we want to print every node in a list pointed to by `head`:
+```C++
+traverse( head, printNode );
+```
+
+Now let's suppose that we want to traverse a linked list and set all the data elements to zero. We will assume that Item_type is such that the operation of assigning a value of zero to such an item is defined.
+
+Given that we already have the traverse function, all we have to do is write a function to assign a value of zero to the item in a node. If we are to pass this function as a parameter to traverse we must make sure that it has a `void` return type and that it takes a single parameter of type `Node*`:
+
+```C++
+
+void makeZero( Node* thisNode )
+// Pre: thisNode is a pointer to a node; a value of 0
+// can be assigned to an Item_type
+// Post: the item in the node pointed to by thisNode
+// has been set to 0
+{
+    thisNode->item = 0;
+}
+```
+
+If we now have a linked list pointed to by head, we can set every item in the list to zero by calling the traverse function:
+
+```C++
+traverse( head, makeZero );
+```
+
+The traverse function provides us with a reasonable amount of flexibility in that we specify how each node is to be processed by passing a pointer to a function that will process the node. However, we are restricted by the fact that the function processing each node must have a `void` return type and must take a single parameter of type `Node*`.
+
+#### Variations on Singly Linked Lists
+
+##### Head Nodes / Dummy Nodes
+
+Recall that the algorithm for inserting a node at the front of a singly linked list is different from that for inserting a node at any other point in the list. The same can be said for deleting a node. The problem is that when we insert or delete at the front of the list, there is no "previous node". Hence, insertion or deletion at the front of a list is a special case that needs to be checked--this leads to a certain amount of inefficiency when coding these operations. We can avoid this situation by using a head node or dummy node. A head node is not used to store data. It is created when the list is created. If we now want to insert an item at the head of the list, we insert it *after* the head node.
+
+The following code segment can now be used to insert a node into the list no matter where the insertion occurs. We assume that `previousNode` points to the node after which the new node is to be inserted:
+```C++
+Node* newNode = new Node;
+newNode->next = previousNode->next;
+previousNode->next = newNode;
+```
+The use of a head node therefore simplifies our algorithms for insertion and deletion, However, we must realize that we are paying the price of allocating memory to a node that is not used to store data.
+
+##### Circular Linked Lists
+
+A circular linked list is such that the node at the end of the list contains a link to the node at the head of the list.
+
+Suppose we have a computer system that supports multiple users. Users can log in or log off from the system at any time so it is useful to maintain a list of users using a linked list--the list can then grow or shrink as needed and we can delete users from the middle of the list without having to do any shifting (as would be the case if we used a circular array).
+
+The users are kept in a list so that they each get access to the system's resources for some fixed period of time. Once all of the users have had a turn at accessing the system's resources, we then go back to the beginning of the list and give each of the users another turn and so on. Rather than having to check for the end of the list and then resetting the cursor to point to the head of the list, it is more convenient to have the last node point to the first so we can simply advance the cursor, thereby creating a circular linked list.
+
+##### Doubly Linked Lists
+
+A doubly linked list is similar to a singly linked list except that each node has a pointer to the previous node as well as a pointer to the next node.
+
+Such lists are useful when we want to be able to traverse the list in either direction. Having a doubly linked list can also make the operation of deleting a node easier. Let's suppose we have a singly linked list and a pointer to a node in that list that we want to delete.
+
+In order to complete this operation, we need a pointer to the previous node. The only way to get this pointer is to start at the head of the list and traverse the list until we locate the previous node. However, if we have a doubly linked list, getting a pointer to the previous node is trivial since every node contains a pointer to both the previous node and the next node (assuming these nodes exist).
+
+Another use for a doubly linked list is to maintain a list of data in sorted order based on two different criteria. Suppose, for example, we have a list of students each having a last name and a student number. We can sort by last name or by student number. We can maintain a list of students sorted using both criteria by using a doubly linked list with two head pointers.
+
+Building a list in this way is useful when we have a large number of users accessing the same data--some want the data sorted one way, other another. Rather than re-sorting the data as necessary, we link the data together using both sorting orders.
+
+However, building such a list is expensive (and algorithmically challenging). Each node requires two pointers. When we insert a new node, we have to search to find an appropriate insertion point twice--once to maintain the order by name and again to maintain the order by number.
+
+#### Binary Trees
+
+*Motivation*: Suppose we want to search for data stored in a structure. We know that if the data is stored in an array, we can use a simple linear search (O(n)) or we can use binary search (O(log n)). Now let's suppose the data is stored in a linked list.
+
+Again, we can use a simple linear search algorithm (as we did in our `find` function in the singly linked list toolkit). However, the use of a binary search algorithm requires us to be able to directly access the item in the middle of the list--as a linked list is a sequential access structure, this is not possible--we have to traverse the list to find the midpoint and this degrades the performance of the algorithm.
+
+In a binary tree (a binary search tree, a special case of binary tree), at each node in the tree, the data to the left is smaller and the data to the right is larger (alphabetically). Suppose we are searching for the letter J. We start at the top of the tree (called the root), knowing that J is greater than G, we can discard the left half of the tree and search only the right half. We have therefore cut down the amount of data to be searched by half--just as we do when searching an array using a binary search algorithm! Similarly, when we arrive at the node containing K, we know that J is smaller than K, so we discard the right half of the remaining tree and search the left.
+
+Definition: A binary tree is a structure that is either empty or consists of a node called a *root* and two binary trees called the *left sub-tree* and *right sub-tree*. Note that this definition is *recursive*--we define a binary tree as a structure that consists of two other (sub) trees.
+- *Domain*: a set of nodes containing one data item and two pointers to other nodes (the set could be empty)
+- *Structure*: there is a unique root node (that has no parent node) having zero, one, or two child nodes; every other node has exactly one parent node and either zero, one or two child nodes
+- *Operations*: insertLeft, insertRight, find, findParent, deleteItem, print, etc.
+
+Some terminology:
+
+The *path* from node N1 to node Nk is a sequence of nodes N1, N2, ..., Nk where Ni is a parent of Ni+1. The *length* of the path is the number of nodes in the path (some texts use the number of edges rather than number of nodes).
+
+The *depth* or *level* of a node N is the length of the path from the foor to N. The level of the root is 1.
+
+The *height* of a node N is the length of the longest path from N to a leaf node. The height of a leaf node is 1. The *height of a tree* is the height of the root node.
+
+The number of nodes in a tree of height h is at least h and no more than (2^h)-1.
+
